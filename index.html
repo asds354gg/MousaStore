@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mousa Store — shop the latest products and check out via Instagram DM.">
+  <title>Mousa Store — Shop</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="brand" href="index.html">Mousa<span>Store</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active" aria-current="page">Shop</a></li>
+        <li><a class="cart-link" href="cart.html">Cart <span class="cart-count" id="cartCount" hidden>0</span></a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">Our Products</h1>
+    <p class="page-subtitle">Pick a product, choose a quantity, and check out via Instagram DM.</p>
+    <div id="productGrid" class="product-grid"></div>
+  </main>
+
+  <footer class="site-footer container">
+    <span>© <span id="year"></span> Mousa Store</span>
+    <a href="admin/login.html">Admin</a>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

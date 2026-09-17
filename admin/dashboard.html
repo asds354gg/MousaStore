@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dashboard — Mousa Store Admin</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="../assets/js/app.js" defer></script>
+  <script src="../assets/js/admin.js" defer></script>
+</head>
+<body id="dashboard">
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="brand" href="../index.html">Mousa<span>Store</span> <small style="font-weight:600">Admin</small></a>
+      <button class="btn btn-secondary btn-sm" id="logoutBtn">Log out</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Add, delete, and toggle stock for your products.</p>
+
+    <div class="notice">
+      Edits below are <strong>pending in this browser</strong> (localStorage) until you click
+      <strong>Save Changes to GitHub</strong>. Saving fetches the current <code>products.json</code> from your repo,
+      merges your pending changes into it, and commits it back — which triggers a GitHub Pages rebuild.
+      Pending edits that are never saved stay local to this device.
+    </div>
+
+    <div class="admin-toolbar">
+      <h2 class="page-subtitle" style="margin:0">Product catalog <span id="productCount" style="color:var(--text-muted)"></span></h2>
+      <div class="admin-toolbar-actions">
+        <button class="btn btn-secondary btn-sm" id="resetBtn">Discard pending changes</button>
+        <button class="btn btn-sm" id="saveBtn">Save Changes to GitHub</button>
+      </div>
+    </div>
+
+    <div class="sync-bar">
+      <span id="pendingCount" class="pending-badge" style="display:none"></span>
+      <span id="syncStatus" class="sync-status"></span>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-wrap__scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stack">
+      <section class="admin-card">
+        <h2>Add a product</h2>
+        <p class="help">Added here as a pending change — click <strong>Save Changes to GitHub</strong> to publish it.</p>
+        <form id="addProductForm">
+          <div class="form-group">
+            <label for="pName">Product name</label>
+            <input type="text" id="pName" name="name" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pPrice">Price</label>
+              <input type="number" id="pPrice" name="price" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="pStock">Stock status</label>
+              <select id="pStock" name="stock">
+                <option value="in-stock">In stock</option>
+                <option value="out-of-stock">Out of stock</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="pImage">Image URL <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+            <input type="url" id="pImage" name="image" placeholder="https://…">
+          </div>
+          <button class="btn" type="submit">Add product</button>
+        </form>
+      </section>
+
+      <section class="admin-card">
+        <h2>GitHub Settings</h2>
+        <p class="help">
+          <strong>Save Changes to GitHub</strong> reads <code>products.json</code> from your repo (GET),
+          merges the pending changes, and commits it back (PUT) so GitHub Pages rebuilds.
+          Credentials are stored only in this browser's <code>localStorage</code>.
+        </p>
+        <form id="githubSettingsForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ghOwner">GitHub Username</label>
+              <input type="text" id="ghOwner" name="owner" autocomplete="off" placeholder="octocat">
+            </div>
+            <div class="form-group">
+              <label for="ghRepo">Repository Name</label>
+              <input type="text" id="ghRepo" name="repo" autocomplete="off" placeholder="my-store">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ghBranch">Branch</label>
+              <input type="text" id="ghBranch" name="branch" autocomplete="off" placeholder="main">
+            </div>
+            <div class="form-group">
+              <label for="ghToken">Personal Access Token</label>
+              <input type="password" id="ghToken" name="token" autocomplete="off" placeholder="ghp_…">
+            </div>
+          </div>
+          <button class="btn btn-secondary" type="submit">Save GitHub credentials</button>
+        </form>
+        <p class="help" style="margin-top:12px">
+          Token needs <code>public_repo</code> scope for public repos or <code>repo</code> for private ones.
+          Like the admin password, this is a client-side convenience — anyone with access to this browser can read the token.
+        </p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

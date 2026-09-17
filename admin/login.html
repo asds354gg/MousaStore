@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Login — Mousa Store</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="../assets/js/app.js" defer></script>
+  <script src="../assets/js/admin.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="brand" href="../index.html">Mousa<span>Store</span> <small style="font-weight:600">Admin</small></a>
+    </nav>
+  </header>
+
+  <main class="container auth-wrap">
+    <div class="auth-card">
+      <h1>Admin Login</h1>
+      <p>Enter the admin password to manage the store.</p>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autofocus>
+        </div>
+        <p class="summary-hint" id="loginError" style="display:none;color:#dc2626;margin-bottom:12px;">
+          Incorrect password. Try again.
+        </p>
+        <button class="btn btn-block" type="submit">Log In</button>
+      </form>
+
+      <p class="summary-hint" style="margin-top:16px">
+        This is a client-side gate for a static site — it secures the panel from casual visitors, not from technical users.
+      </p>
+    </div>
+  </main>
+</body>
+</html>
