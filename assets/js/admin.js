@@ -193,10 +193,7 @@ const AdminPanel = (() => {
 
     document.getElementById("logoutBtn").addEventListener("click", logout);
 
-    loadDashboardProducts().catch((err) => {
-      document.getElementById("dashboard").innerHTML =
-        `<div class="state-box"><h2>Couldn't load products</h2><p>${err.message}</p></div>`;
-    });
+    loadDashboardProducts().catch(() => renderTable([]));
 
     const form = document.getElementById("addProductForm");
     form.addEventListener("submit", (e) => {

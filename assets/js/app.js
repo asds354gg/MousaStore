@@ -9,8 +9,24 @@ const MousaStore = (() => {
   /* ----------------------------------------------------------
      Configuration — edit these for your own store.
      ---------------------------------------------------------- */
+  // Resolve products.json relative to app.js' own location, so it
+  // works from ANY page depth: /, /admin/, and repo subpaths on
+  // GitHub Pages. Falls back to page-relative paths if locating
+  // the script ever fails.
+  function resolveProductsUrl() {
+    const script = document.querySelector('script[src$="assets/js/app.js"]');
+    if (script) {
+      try {
+        return new URL("../data/products.json", new URL(script.src, location.href)).href;
+      } catch {}
+    }
+    return location.pathname.includes("/admin/")
+      ? "../assets/data/products.json"
+      : "assets/data/products.json";
+  }
+
   const CONFIG = {
-    PRODUCTS_URL: "assets/data/products.json",
+    PRODUCTS_URL: resolveProductsUrl(),
     CART_KEY: "mousa_store_cart",
     OVERRIDES_KEY: "mousa_store_overrides",
     AUTH_KEY: "mousa_store_admin_auth",
@@ -33,6 +49,9 @@ const MousaStore = (() => {
     }
   };
 
+  const isRecord = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+
   const writeJson = (key, value) => {
     localStorage.setItem(key, JSON.stringify(value));
   };
@@ -42,7 +61,8 @@ const MousaStore = (() => {
      ---------------------------------------------------------- */
   const cart = {
     all() {
-      return readJson(CONFIG.CART_KEY, {});
+      const items = readJson(CONFIG.CART_KEY, {});
+      return isRecord(items) ? items : {};
     },
 
     save(items) {
@@ -89,11 +109,15 @@ const MousaStore = (() => {
      ---------------------------------------------------------- */
   const overrides = {
     read() {
-      return readJson(CONFIG.OVERRIDES_KEY, {
-        deleted: [],
-        added: [],
-        updates: {},
-      });
+      const raw = readJson(CONFIG.OVERRIDES_KEY, null);
+      if (!isRecord(raw)) {
+        return { deleted: [], added: [], updates: {} };
+      }
+      return {
+        deleted: Array.isArray(raw.deleted) ? raw.deleted : [],
+        added: Array.isArray(raw.added) ? raw.added : [],
+        updates: isRecord(raw.updates) ? raw.updates : {},
+      };
     },
 
     merge(existing) {
@@ -134,21 +158,33 @@ const MousaStore = (() => {
 
   function mergeProducts(base) {
     const ovr = overrides.read();
-    const kept = base.filter((p) => !ovr.deleted.includes(p.id));
+    const safeBase = Array.isArray(base)
+      ? base.filter((p) => p && typeof p === "object")
+      : [];
+    const kept = safeBase.filter((p) => !ovr.deleted.includes(p.id));
     const merged = kept.map((p) => {
       const patch = ovr.updates[p.id];
-      return patch ? { ...p, ...patch } : p;
+      return isRecord(patch) ? { ...p, ...patch } : p;
     });
     return [...ovr.added, ...merged];
   }
 
   async function loadProducts() {
-    const res = await fetch(CONFIG.PRODUCTS_URL, { cache: "no-store" });
-    if (!res.ok) {
-      throw new Error(`Could not load ${CONFIG.PRODUCTS_URL} (HTTP ${res.status})`);
+    let base = [];
+    try {
+      const res = await fetch(CONFIG.PRODUCTS_URL, { cache: "no-store" });
+      if (res && res.ok) {
+        const text = (await res.text()) || "";
+        if (text.trim()) {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) base = parsed;
+        }
+      }
+    } catch {
+      /* Fetch failed, network error, or invalid JSON: fall back to [] */
     }
-    baseProducts = await res.json();
-    return mergeProducts(baseProducts);
+    baseProducts = base;
+    return mergeProducts(base);
   }
 
   /* ----------------------------------------------------------
@@ -304,10 +340,7 @@ const MousaStore = (() => {
     const items = cart.all();
     const ids = Object.keys(items);
     if (ids.length === 0) {
-      listEl.innerHTML = "";
-      document.getElementById("cartSummary").innerHTML =
-        '<div class="state-box"><h2>Your cart is empty</h2><p><a href="index.html">Browse products</a> to get started.</p></div>';
-      document.getElementById("cartSummary").style.display = "block";
+      renderEmptyCart(listEl);
       return;
     }
 
@@ -342,9 +375,17 @@ const MousaStore = (() => {
           location.reload();
         });
       })
-      .catch((err) => {
-        listEl.innerHTML = `<div class="state-box"><h2>Cart unavailable</h2><p>${err.message}</p></div>`;
-      });
+      .catch(() => renderEmptyCart(listEl));
+  }
+
+  function renderEmptyCart(listEl) {
+    listEl.innerHTML = "";
+    const summary = document.getElementById("cartSummary");
+    if (summary) {
+      summary.innerHTML =
+        '<div class="state-box"><h2>Your cart is empty</h2><p><a href="index.html">Browse products</a> to get started.</p></div>';
+      summary.style.display = "block";
+    }
   }
 
   function buildCartRow(product, qty, line) {
@@ -575,13 +616,9 @@ const MousaStore = (() => {
   function initHome() {
     const grid = document.getElementById("productGrid");
     if (!grid) return;
-    grid.innerHTML =
-      '<div class="state-box"><div class="spinner"></div><p>Loading products…</p></div>';
     loadProducts()
       .then((products) => renderProducts(products))
-      .catch((err) => {
-        grid.innerHTML = `<div class="state-box"><h2>Couldn't load products</h2><p>${err.message}</p><p>Tip: open this site via GitHub Pages (https) or a local server.</p></div>`;
-      });
+      .catch(() => renderProducts([]));
   }
 
   function initCart() {
