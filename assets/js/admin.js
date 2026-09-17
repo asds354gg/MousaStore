@@ -385,10 +385,15 @@ const AdminPanel = (() => {
         MousaStore.loadProducts().then(renderTable);
       });
 
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-sm btn-secondary";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => openEditModal(p));
+
       const tdActions = document.createElement("td");
       const actions = document.createElement("div");
       actions.className = "cell-actions";
-      actions.append(toggleBtn, deleteBtn);
+      actions.append(editBtn, toggleBtn, deleteBtn);
       tdActions.appendChild(actions);
 
       tr.append(tdThumb, tdName, tdPrice, tdStock, tdActions);

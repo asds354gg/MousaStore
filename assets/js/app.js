@@ -146,6 +146,17 @@ const MousaStore = (() => {
       writeJson(CONFIG.OVERRIDES_KEY, ovr);
     },
 
+    updateProduct(id, fields) {
+      const ovr = this.merge(this.read());
+      const idx = ovr.added.findIndex((p) => p.id === id);
+      if (idx >= 0) {
+        ovr.added[idx] = { ...ovr.added[idx], ...fields };
+      } else {
+        ovr.updates[id] = { ...(ovr.updates[id] || {}), ...fields };
+      }
+      writeJson(CONFIG.OVERRIDES_KEY, ovr);
+    },
+
     clearAll() {
       localStorage.removeItem(CONFIG.OVERRIDES_KEY);
     },
