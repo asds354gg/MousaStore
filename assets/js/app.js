@@ -14,12 +14,12 @@ const MousaStore = (() => {
     CART_KEY: "mousa_store_cart",
     OVERRIDES_KEY: "mousa_store_overrides",
     AUTH_KEY: "mousa_store_admin_auth",
-    INSTAGRAM_USERNAME: "mousa.store",
-    CURRENCY: "$",
+    INSTAGRAM_DM_URL: "https://www.instagram.com/direct/t/18078857297185807/",
+    CURRENCY: "EGP",
     DEFAULT_IMAGE: "https://placehold.co/480x360/e2e8f0/475569?text=Product",
   };
 
-  const IG_DM_URL = `https://ig.me/m/${CONFIG.INSTAGRAM_USERNAME}`;
+  const IG_DM_URL = CONFIG.INSTAGRAM_DM_URL;
 
   /* ----------------------------------------------------------
      Small JSON helpers for localStorage
@@ -154,7 +154,8 @@ const MousaStore = (() => {
   /* ----------------------------------------------------------
      Formatting helpers
      ---------------------------------------------------------- */
-  const formatPrice = (value) => `${CONFIG.CURRENCY}${Number(value).toFixed(2)}`;
+  const formatPrice = (value) =>
+    `${Number(value).toFixed(2)} ${CONFIG.CURRENCY}`;
 
   const stockLabel = (stock) =>
     stock === "out-of-stock" ? "Out of stock" : "In stock";
@@ -217,26 +218,47 @@ const MousaStore = (() => {
       price.className = "product-price";
       price.textContent = formatPrice(p.price);
 
-      const qtyInput = document.createElement("input");
-      qtyInput.type = "number";
-      qtyInput.min = "1";
-      qtyInput.max = "99";
-      qtyInput.value = "1";
-      qtyInput.setAttribute("aria-label", `Quantity of ${p.name}`);
-      qtyInput.disabled = unavailable;
+      const qtyValue = document.createElement("span");
+      qtyValue.className = "qty-value";
+      qtyValue.textContent = "1";
+
+      const qtyMinus = document.createElement("button");
+      qtyMinus.type = "button";
+      qtyMinus.textContent = "−";
+      qtyMinus.setAttribute("aria-label", `Decrease quantity of ${p.name}`);
+      qtyMinus.addEventListener("click", () => {
+        qtyValue.textContent = Math.max(1, parseInt(qtyValue.textContent, 10) - 1);
+      });
+
+      const qtyPlus = document.createElement("button");
+      qtyPlus.type = "button";
+      qtyPlus.textContent = "+";
+      qtyPlus.setAttribute("aria-label", `Increase quantity of ${p.name}`);
+      qtyPlus.addEventListener("click", () => {
+        qtyValue.textContent = Math.min(99, parseInt(qtyValue.textContent, 10) + 1);
+      });
+
+      if (unavailable) {
+        qtyMinus.disabled = true;
+        qtyPlus.disabled = true;
+      }
+
+      const stepper = document.createElement("div");
+      stepper.className = "qty-stepper";
+      stepper.append(qtyMinus, qtyValue, qtyPlus);
 
       const addBtn = document.createElement("button");
       addBtn.className = "btn";
       addBtn.textContent = unavailable ? "Out of stock" : "Add to Cart";
       addBtn.disabled = unavailable;
       addBtn.addEventListener("click", () => {
-        cart.add(p.id, parseInt(qtyInput.value, 10) || 1);
+        cart.add(p.id, parseInt(qtyValue.textContent, 10) || 1);
         showToast(`${p.name} added to cart`);
       });
 
       const qtyRow = document.createElement("div");
       qtyRow.className = "qty-row";
-      qtyRow.append(qtyInput, addBtn);
+      qtyRow.append(stepper, addBtn);
 
       const footer = document.createElement("div");
       footer.className = "product-footer";
@@ -391,22 +413,26 @@ const MousaStore = (() => {
   }
 
   /* ----------------------------------------------------------
-     Instagram checkout — builds message, copies to clipboard,
-     opens Instagram DM.
+     Instagram checkout — copies the order to the clipboard and
+     opens a modal that redirects the customer to Instagram DM.
      ---------------------------------------------------------- */
-  async function instagramCheckout(items, productMap) {
-    const lines = Object.entries(items).map(([id, qty]) => {
-      const p = productMap[id];
-      if (!p) return null;
-      return `${p.name} x${qty} — ${formatPrice(p.price * qty)}`;
-    }).filter(Boolean);
+  let pendingOrderMessage = "";
+
+  function buildOrderMessage(items, productMap) {
+    const lines = Object.entries(items)
+      .map(([id, qty]) => {
+        const p = productMap[id];
+        if (!p) return null;
+        return `${p.name} x${qty} — ${formatPrice(p.price * qty)}`;
+      })
+      .filter(Boolean);
 
     const subtotal = Object.entries(items).reduce((sum, [id, qty]) => {
       const p = productMap[id];
       return p ? sum + p.price * qty : sum;
     }, 0);
 
-    const message = [
+    return [
       "Hi! I'd like to order:",
       "",
       ...lines.map((l, i) => `${i + 1}. ${l}`),
@@ -415,14 +441,116 @@ const MousaStore = (() => {
       "",
       "Thank you!",
     ].join("\n");
+  }
 
+  async function instagramCheckout(items, productMap) {
+    pendingOrderMessage = buildOrderMessage(items, productMap);
+
+    let copied = true;
     try {
-      await copyText(message);
-      showToast("Order copied — paste it in Instagram DM", "success");
+      await copyText(pendingOrderMessage);
+      showToast('Order copied — now tap "Open Instagram & Send"', "success");
     } catch {
-      showToast("Couldn't copy automatically — message is in a prompt below", "error");
+      copied = false;
+      showToast("Auto-copy was blocked — copy from the box below", "error");
     }
-    window.open(IG_DM_URL, "_blank", "noopener,noreferrer");
+
+    buildCheckoutModal();
+    const overlay = document.getElementById("checkoutModal");
+    const manual = overlay.querySelector(".modal-copy");
+
+    manual.value = pendingOrderMessage;
+    manual.hidden = copied;
+    overlay.classList.add("open");
+
+    if (copied) {
+      overlay.querySelector(".modal-submit").focus();
+    } else {
+      manual.focus();
+      manual.select();
+    }
+  }
+
+  function buildCheckoutModal() {
+    if (document.getElementById("checkoutModal")) return;
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "checkoutModal";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "checkoutModalTitle");
+
+    const box = document.createElement("div");
+    box.className = "modal";
+    box.setAttribute("role", "document");
+
+    const close = document.createElement("button");
+    close.className = "modal-close";
+    close.setAttribute("aria-label", "Close");
+    close.innerHTML = "&times;";
+
+    const icon = document.createElement("div");
+    icon.className = "modal-icon";
+    icon.textContent = "✓";
+
+    const title = document.createElement("h2");
+    title.id = "checkoutModalTitle";
+    title.textContent = "Checkout via Instagram DM";
+
+    const message = document.createElement("p");
+    message.className = "modal-message";
+    message.textContent =
+      "Your cart items have been copied to your clipboard! You will now be redirected to our Instagram DMs. Please Paste and send the message to complete and track your order.";
+
+    const manual = document.createElement("textarea");
+    manual.className = "modal-copy";
+    manual.readOnly = true;
+    manual.setAttribute(
+      "aria-label",
+      "Your order message — copy it and paste it into the Instagram DM"
+    );
+    manual.hidden = true;
+
+    const submit = document.createElement("button");
+    submit.className = "btn btn-instagram modal-submit";
+    submit.textContent = "Open Instagram & Send";
+    submit.addEventListener("click", async () => {
+      submit.disabled = true;
+      try {
+        await copyText(pendingOrderMessage);
+      } catch {}
+      window.open(IG_DM_URL, "_blank", "noopener,noreferrer");
+      closeCheckoutModal(overlay);
+      setTimeout(() => {
+        submit.disabled = false;
+      }, 500);
+    });
+
+    const cancel = document.createElement("button");
+    cancel.className = "btn btn-secondary modal-cancel";
+    cancel.textContent = "Later";
+    cancel.addEventListener("click", () => closeCheckoutModal(overlay));
+
+    box.append(close, icon, title, message, manual, submit, cancel);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    close.addEventListener("click", () => closeCheckoutModal(overlay));
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeCheckoutModal(overlay);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("open")) {
+        closeCheckoutModal(overlay);
+      }
+    });
+  }
+
+  function closeCheckoutModal(overlay) {
+    overlay.classList.remove("open");
+    const trigger = document.getElementById("checkoutBtn");
+    if (trigger) trigger.focus();
   }
 
   async function copyText(text) {

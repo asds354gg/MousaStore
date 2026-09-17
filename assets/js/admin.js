@@ -193,7 +193,7 @@ const AdminPanel = (() => {
 
     document.getElementById("logoutBtn").addEventListener("click", logout);
 
-    MousaStore.loadProducts().then(renderTable).catch((err) => {
+    loadDashboardProducts().catch((err) => {
       document.getElementById("dashboard").innerHTML =
         `<div class="state-box"><h2>Couldn't load products</h2><p>${err.message}</p></div>`;
     });
@@ -234,6 +234,36 @@ const AdminPanel = (() => {
       GitHubSync.saveConfig(next);
       MousaStore.showToast("GitHub credentials saved", "success");
     });
+  }
+
+  /* ----------------------------------------------------------
+     Load initial dashboard data.
+     Local view (products.json base + pending overrides) wins
+     when it has anything; otherwise fall back to the current
+     file stored in the GitHub repo via the saved credentials.
+     ---------------------------------------------------------- */
+  async function loadDashboardProducts() {
+    const localProducts = await MousaStore.loadProducts();
+    if (localProducts.length > 0) {
+      renderTable(localProducts);
+      return;
+    }
+
+    const config = GitHubSync.readConfig();
+    if (!GitHubSync.isConfigComplete(config)) {
+      renderTable(localProducts);
+      return;
+    }
+
+    try {
+      const remote = await GitHubSync.fetchFile(config);
+      const remoteProducts = remote.content
+        ? JSON.parse(base64ToUtf8(remote.content))
+        : [];
+      renderTable(MousaStore.mergeProducts(remoteProducts));
+    } catch {
+      renderTable(localProducts);
+    }
   }
 
   /* ----------------------------------------------------------
