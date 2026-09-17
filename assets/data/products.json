@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "prod-mu5qec3l",
+    "name": "tmpo",
+    "price": 1000,
+    "image": "https://placehold.co/480x360/e2e8f0/475569?text=Product",
+    "stock": "in-stock"
+  }
+]
