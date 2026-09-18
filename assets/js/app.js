@@ -205,7 +205,7 @@ const MousaStore = (() => {
     `${Number(value).toFixed(2)} ${CONFIG.CURRENCY}`;
 
   const stockLabel = (stock) =>
-    stock === "out-of-stock" ? "Out of stock" : "In stock";
+    stock === "out-of-stock" ? "غير متوفر" : "متوفر";
 
   /* ----------------------------------------------------------
      Toast notifications
@@ -272,7 +272,7 @@ const MousaStore = (() => {
       const qtyMinus = document.createElement("button");
       qtyMinus.type = "button";
       qtyMinus.textContent = "−";
-      qtyMinus.setAttribute("aria-label", `Decrease quantity of ${p.name}`);
+      qtyMinus.setAttribute("aria-label", `تقليل كمية ${p.name}`);
       qtyMinus.addEventListener("click", () => {
         qtyValue.textContent = Math.max(1, parseInt(qtyValue.textContent, 10) - 1);
       });
@@ -280,7 +280,7 @@ const MousaStore = (() => {
       const qtyPlus = document.createElement("button");
       qtyPlus.type = "button";
       qtyPlus.textContent = "+";
-      qtyPlus.setAttribute("aria-label", `Increase quantity of ${p.name}`);
+      qtyPlus.setAttribute("aria-label", `زيادة كمية ${p.name}`);
       qtyPlus.addEventListener("click", () => {
         qtyValue.textContent = Math.min(99, parseInt(qtyValue.textContent, 10) + 1);
       });
@@ -296,11 +296,11 @@ const MousaStore = (() => {
 
       const addBtn = document.createElement("button");
       addBtn.className = "btn";
-      addBtn.textContent = unavailable ? "Out of stock" : "Add to Cart";
+      addBtn.textContent = unavailable ? "غير متوفر" : "أضف إلى السلة";
       addBtn.disabled = unavailable;
       addBtn.addEventListener("click", () => {
         cart.add(p.id, parseInt(qtyValue.textContent, 10) || 1);
-        showToast(`${p.name} added to cart`);
+        showToast(`تمت إضافة «${p.name}» إلى سلة المشتريات`);
       });
 
       const qtyRow = document.createElement("div");
@@ -335,7 +335,7 @@ const MousaStore = (() => {
     if (products.length > 0) return;
     const box = document.createElement("div");
     box.className = "state-box";
-    box.innerHTML = "<h2>No products yet</h2><p>Check back soon or visit the admin panel to add products.</p>";
+    box.innerHTML = "<h2>لا توجد منتجات حالياً</h2><p>ترقبوا المنتجات الجديدة قريباً، أو تواصلوا معنا عبر رسائل إنستغرام المباشرة.</p>";
     grid.parentElement.appendChild(box);
   }
 
@@ -394,7 +394,7 @@ const MousaStore = (() => {
     const summary = document.getElementById("cartSummary");
     if (summary) {
       summary.innerHTML =
-        '<div class="state-box"><h2>Your cart is empty</h2><p><a href="index.html">Browse products</a> to get started.</p></div>';
+        '<div class="state-box"><h2>سلتك فارغة</h2><p><a href="index.html">تصفح المنتجات</a> لتبدأ التسوق.</p></div>';
       summary.style.display = "block";
     }
   }
@@ -412,11 +412,11 @@ const MousaStore = (() => {
 
     const price = document.createElement("div");
     price.className = "cart-item-price";
-    price.textContent = `${formatPrice(product.price)} each`;
+    price.textContent = `${formatPrice(product.price)} لكل قطعة`;
 
     const minus = document.createElement("button");
     minus.textContent = "−";
-    minus.setAttribute("aria-label", "Decrease quantity");
+    minus.setAttribute("aria-label", "تقليل الكمية");
     minus.addEventListener("click", () => {
       cart.setQuantity(product.id, qty - 1);
       renderCartPage();
@@ -424,7 +424,7 @@ const MousaStore = (() => {
 
     const plus = document.createElement("button");
     plus.textContent = "+";
-    plus.setAttribute("aria-label", "Increase quantity");
+    plus.setAttribute("aria-label", "زيادة الكمية");
     plus.addEventListener("click", () => {
       cart.setQuantity(product.id, qty + 1);
       renderCartPage();
@@ -447,7 +447,7 @@ const MousaStore = (() => {
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "btn btn-sm btn-danger";
-    removeBtn.textContent = "Remove";
+    removeBtn.textContent = "إزالة";
     removeBtn.addEventListener("click", () => {
       cart.remove(product.id);
       renderCartPage();
@@ -485,13 +485,13 @@ const MousaStore = (() => {
     }, 0);
 
     return [
-      "Hi! I'd like to order:",
+      "مرحباً! أود طلب الآتي:",
       "",
       ...lines.map((l, i) => `${i + 1}. ${l}`),
       "",
-      `Total: ${formatPrice(subtotal)}`,
+      `الإجمالي: ${formatPrice(subtotal)}`,
       "",
-      "Thank you!",
+      "شكراً لكم!",
     ].join("\n");
   }
 
@@ -501,10 +501,10 @@ const MousaStore = (() => {
     let copied = true;
     try {
       await copyText(pendingOrderMessage);
-      showToast('Order copied — now tap "Open Instagram & Send"', "success");
+      showToast('تم نسخ الطلب — اضغط الآن زر "افتح إنستغرام وأرسل"', "success");
     } catch {
       copied = false;
-      showToast("Auto-copy was blocked — copy from the box below", "error");
+      showToast("تعذّر النسخ التلقائي — انسخ الرسالة من الحقل بالأسفل", "error");
     }
 
     buildCheckoutModal();
@@ -539,7 +539,7 @@ const MousaStore = (() => {
 
     const close = document.createElement("button");
     close.className = "modal-close";
-    close.setAttribute("aria-label", "Close");
+    close.setAttribute("aria-label", "إغلاق");
     close.innerHTML = "&times;";
 
     const icon = document.createElement("div");
@@ -548,25 +548,30 @@ const MousaStore = (() => {
 
     const title = document.createElement("h2");
     title.id = "checkoutModalTitle";
-    title.textContent = "Checkout via Instagram DM";
+    title.textContent = "إتمام الطلب عبر إنستغرام";
 
     const message = document.createElement("p");
     message.className = "modal-message";
     message.textContent =
-      "Your cart items have been copied to your clipboard! You will now be redirected to our Instagram DMs. Please Paste and send the message to complete and track your order.";
+      "تم نسخ تفاصيل طلبك إلى الحافظة.";
+
+    const instruction = document.createElement("div");
+    instruction.className = "modal-instruction";
+    instruction.innerHTML =
+      'افتح محادثة إنستغرام المباشرة، الصق رسالة الطلب <strong>(Ctrl + V)</strong> في مربع الكتابة، ثم اضغط <strong>إرسال</strong> لإتمام طلبك.';
 
     const manual = document.createElement("textarea");
     manual.className = "modal-copy";
     manual.readOnly = true;
     manual.setAttribute(
       "aria-label",
-      "Your order message — copy it and paste it into the Instagram DM"
+      "رسالة طلبك — انسخها والصقها في محادثة إنستغرام"
     );
     manual.hidden = true;
 
     const submit = document.createElement("button");
     submit.className = "btn btn-instagram modal-submit";
-    submit.textContent = "Open Instagram & Send";
+    submit.textContent = "افتح إنستغرام وأرسل";
     submit.addEventListener("click", async () => {
       submit.disabled = true;
       try {
@@ -581,10 +586,10 @@ const MousaStore = (() => {
 
     const cancel = document.createElement("button");
     cancel.className = "btn btn-secondary modal-cancel";
-    cancel.textContent = "Later";
+    cancel.textContent = "لاحقاً";
     cancel.addEventListener("click", () => closeCheckoutModal(overlay));
 
-    box.append(close, icon, title, message, manual, submit, cancel);
+    box.append(close, icon, title, message, instruction, manual, submit, cancel);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 

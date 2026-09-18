@@ -16,7 +16,7 @@
   --radius: 14px;
   --shadow: 0 1px 3px rgb(15 23 42 / 0.08), 0 10px 25px -8px rgb(15 23 42 / 0.1);
   --max-width: 1100px;
-  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font: "Segoe UI", "Tahoma", "Arial", system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -126,6 +126,11 @@ main {
   border-radius: 999px;
   display: grid;
   place-items: center;
+}
+
+[dir="rtl"] .cart-count {
+  right: auto;
+  left: -14px;
 }
 
 /* ---------- Page headings ---------- */
@@ -847,7 +852,26 @@ main {
 .modal-message {
   color: var(--text-muted);
   font-size: 0.92rem;
+  margin-bottom: 14px;
+}
+
+.modal-instruction {
   margin-bottom: 16px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  text-align: start;
+  box-shadow: 0 10px 24px -10px rgb(221 42 123 / 0.55);
+}
+
+.modal-instruction strong {
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .modal-copy {
@@ -861,7 +885,7 @@ main {
   margin-bottom: 16px;
   resize: vertical;
   background: #f8fafc;
-  text-align: left;
+  text-align: start;
 }
 
 .modal .btn {
@@ -869,7 +893,7 @@ main {
 }
 
 .modal form {
-  text-align: left;
+  text-align: start;
 }
 
 .modal form .radio-row {
