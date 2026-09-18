@@ -326,7 +326,10 @@ const AdminPanel = (() => {
   /* ----------------------------------------------------------
      Table rendering
      ---------------------------------------------------------- */
+  let currentProducts = [];
+
   function renderTable(products) {
+    currentProducts = products;
     const tbody = document.getElementById("productsBody");
     if (!tbody) return;
 
@@ -388,7 +391,8 @@ const AdminPanel = (() => {
       const editBtn = document.createElement("button");
       editBtn.className = "btn btn-sm btn-secondary";
       editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => openEditModal(p));
+      editBtn.dataset.action = "edit";
+      editBtn.dataset.id = p.id;
 
       const tdActions = document.createElement("td");
       const actions = document.createElement("div");
@@ -437,10 +441,92 @@ const AdminPanel = (() => {
   }
 
   /* ----------------------------------------------------------
+     Edit product modal
+     ---------------------------------------------------------- */
+  function openEditModal(productId) {
+    const product = currentProducts.find((p) => p.id === productId);
+    if (!product) {
+      MousaStore.showToast("Product not found", "error");
+      return;
+    }
+
+    document.getElementById("editProductId").value = product.id;
+    document.getElementById("editName").value = product.name;
+    document.getElementById("editPrice").value = product.price;
+    document.getElementById("editImage").value = product.image || "";
+
+    const inStock = document.getElementById("editStockIn");
+    const outOfStock = document.getElementById("editStockOut");
+    inStock.checked = product.stock !== "out-of-stock";
+    outOfStock.checked = product.stock === "out-of-stock";
+
+    document.getElementById("editModal").classList.add("open");
+  }
+
+  function saveEditedProduct() {
+    const id = document.getElementById("editProductId").value;
+    const name = document.getElementById("editName").value.trim();
+    const price = parseFloat(document.getElementById("editPrice").value);
+    const image = document.getElementById("editImage").value.trim();
+    const stock = document.getElementById("editStockIn").checked
+      ? "in-stock"
+      : "out-of-stock";
+
+    if (!name) {
+      MousaStore.showToast("Product name is required", "error");
+      return;
+    }
+    if (!(price >= 0) || Number.isNaN(price)) {
+      MousaStore.showToast("Enter a valid price", "error");
+      return;
+    }
+
+    MousaStore.overrides.updateProduct(id, {
+      name,
+      price,
+      image: image || CONFIG.DEFAULT_IMAGE,
+      stock,
+    });
+    MousaStore.showToast(`"${name}" updated`, "success");
+    document.getElementById("editModal").classList.remove("open");
+    MousaStore.loadProducts().then(renderTable);
+  }
+
+  function initEditModal() {
+    const modal = document.getElementById("editModal");
+    if (!modal) return;
+
+    const close = () => {
+      modal.classList.remove("open");
+      modal.querySelector("form").reset();
+    };
+
+    modal.querySelector(".modal-close").addEventListener("click", close);
+    modal.querySelector(".modal-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) close();
+    });
+
+    document.getElementById("editProductForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      saveEditedProduct();
+    });
+
+    document.getElementById("productsBody").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-action='edit']");
+      if (btn) openEditModal(btn.dataset.id);
+    });
+  }
+
+  /* ----------------------------------------------------------
      Bootstrap the active page
      ---------------------------------------------------------- */
   function init() {
     initLogin();
+    initEditModal();
     initDashboard();
   }
 

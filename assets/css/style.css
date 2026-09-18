@@ -868,6 +868,30 @@ main {
   width: 100%;
 }
 
+.modal form {
+  text-align: left;
+}
+
+.modal form .radio-row {
+  display: flex;
+  gap: 18px;
+}
+
+.modal form .radio-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.modal form [type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+
 .modal-cancel {
   margin-top: 10px;
 }
